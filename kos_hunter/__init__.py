@@ -1,4 +1,4 @@
-"""Core domain and application services for kos-hunter."""
+"""Core domain and application services for Ngekos AI."""
 
 from .domain import Gender, KosListing, SearchCriteria, TenantProfile
 

@@ -1,6 +1,6 @@
 # Platform Adapters
 
-kos-hunter is built against a **platform adapter interface** — a standard contract every kos data source implements. Adding a new platform = writing one adapter class. The agent layer never changes.
+Ngekos AI is built against a **platform adapter interface** — a standard contract every kos data source implements. Adding a new platform = writing one adapter class. The agent layer never changes.
 
 ---
 

@@ -1,8 +1,8 @@
-# kos-hunter
+# Ngekos AI
 
-An OpenClaw agent for finding eligible kos listings, contacting landlords, and handing consequential decisions back to its user.
+An autonomous AI agent for finding eligible kos (boarding house) listings, contacting landlords via WhatsApp, negotiating terms, and handing consequential decisions back to the user.
 
-The project is currently an experimental, single-user tool. Its modular-monolith and ports-and-adapters boundaries are intended to support additional listing platforms and communication channels later.
+The project is designed with a modular-monolith and ports-and-adapters architecture to evolve from a personal hunting co-pilot into a multi-tenant SaaS platform (**Ngekos AI**).
 
 ## Safety
 

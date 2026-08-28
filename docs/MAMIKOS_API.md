@@ -66,7 +66,7 @@ GET https://mamikos.com/garuda/stories/filters
 }
 ```
 
-**Key facility IDs for kos-hunter:**
+**Key facility IDs for Ngekos AI:**
 
 | fac_id | Meaning |
 |---|---|
@@ -125,7 +125,7 @@ Content-Type: application/json
 
 **`filters.gender`** — array of accepted gender codes. `[0,1,2]` = all. For putra only: `[0,1]`. For putri only: `[0,2]`.
 
-**`filters.price_range`** — `[min_rupiah, max_rupiah]`. Use `[1000000, 2000000]` for the kos-hunter budget.
+**`filters.price_range`** — `[min_rupiah, max_rupiah]`. Use `[1000000, 2000000]` for the budget.
 
 **`filters.tag_ids`** — facility IDs from Endpoint 1. Empty array `[]` = no facility filter (returns everything, filter client-side). Passing IDs server-filters — but only returns rooms with ALL specified tags; use `[]` and filter client-side for more results.
 
@@ -149,7 +149,7 @@ NE: [106.860, -6.330]
 → "location": [[106.800, -6.400], [106.860, -6.330]]
 ```
 
-**`sorting`** — `{"field":"price","direction":"-"}` = most expensive first. Use `"direction":"+"` for cheapest first (recommended for kos-hunter).
+**`sorting`** — `{"field":"price","direction":"-"}` = most expensive first. Use `"direction":"+"` for cheapest first (recommended).
 
 **`limit`** / **`offset`** — pagination. Max 20 per page. Increment `offset` by 20 each page. Stop when `has-more: false`.
 
