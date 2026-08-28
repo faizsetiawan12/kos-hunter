@@ -21,7 +21,20 @@ The project is currently an experimental, single-user tool. Its modular-monolith
 
 ## Current Status
 
-The existing code is a research prototype. The architecture in issue #1 is the implementation target, not a claim that the current prototype is production-ready.
+The core modular-monolith foundation, ports-and-adapters architecture, SQLite persistence, Mamikos listing source adapter, OpenClaw entry point, WhatsApp approval outreach, conversation tracking, and negotiation approval gates are implemented with 41 passing unit and acceptance tests.
+
+## Architecture
+
+The system follows a ports-and-adapters design:
+- `kos_hunter/domain.py`: Vendor-free domain models, criteria, ranking, and port definitions (`ListingSource`, `MessagingPort`, `NotificationPort`, `PersistencePort`, `ClockPort`).
+- `kos_hunter/application.py`: Primary application facade coordinating search, hard eligibility, soft ranking, and contact enrichment.
+- `kos_hunter/persistence.py`: SQLite persistence adapter for restart-safe search runs, normalized listings, and candidate rankings.
+- `kos_hunter/openclaw.py`: OpenClaw conversational entry point with mutex concurrency guards and formatted shortlist outputs.
+- `kos_hunter/outreach.py`: Approval-mode WhatsApp outreach job queue, 08:00–20:00 WIB rate-limiting, and idempotent send states.
+- `kos_hunter/conversations.py`: Landlord reply tracking, chat fact extraction, and 48h follow-up policy.
+- `kos_hunter/negotiation.py`: Polite negotiation, honest disclosure, and strict `ApprovalRequest` gates for survey/booking/payment handoff.
+- `search/mamikos.py`: Listing source adapter for Mamikos with encrypted payload decryption and contact parsing.
+- `cli.py`: Diagnostic CLI command (`search`) for direct operations and recovery.
 
 ## Development
 
