@@ -1,0 +1,36 @@
+# Local identity and credentials
+IDENTITY.md
+.env
+.env.*
+!.env.example
+*session*.json
+*credentials*.json
+*cookies*.json
+secrets/
+
+# Generated data containing listing or landlord information
+shortlist.json
+data/
+exports/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Worktrees
+.worktrees/
