@@ -20,7 +20,7 @@ Use only approved facts from that file. Never invent details.
 
 ### Phase 1 — Search
 
-1. Run `python -m kos_hunter search --area kukel` to pull listings from Mamikos.
+1. Run `python3 -m kos_hunter search --area kukel` (or `python3 cli.py search --area kukel`) to pull listings from Mamikos.
 2. Filter out: putri-only kos (`gender == 2`), price > 2.000.000.
 3. Rank remaining by: availability → rating → price ascending.
 4. Report the ranked shortlist through the configured user-notification channel before proceeding.

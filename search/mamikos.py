@@ -46,10 +46,19 @@ class MamikosAdapter:
     @staticmethod
     def decrypt_rooms(value: str) -> list[dict]:
         try:
-            from Crypto.Cipher import AES
-            from Crypto.Util.Padding import unpad
-            result=json.loads(unpad(AES.new(_AES_KEY,AES.MODE_CBC,_AES_IV).decrypt(base64.b64decode(value)), AES.block_size).decode())
-            if not isinstance(result,list): raise ValueError
+            try:
+                from Crypto.Cipher import AES
+                from Crypto.Util.Padding import unpad
+                result = json.loads(unpad(AES.new(_AES_KEY, AES.MODE_CBC, _AES_IV).decrypt(base64.b64decode(value)), AES.block_size).decode())
+            except ImportError:
+                from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+                from cryptography.hazmat.primitives import padding
+                cipher = Cipher(algorithms.AES(_AES_KEY), modes.CBC(_AES_IV))
+                decryptor = cipher.decryptor()
+                padded = decryptor.update(base64.b64decode(value)) + decryptor.finalize()
+                unpadder = padding.PKCS7(128).unpadder()
+                result = json.loads((unpadder.update(padded) + unpadder.finalize()).decode('utf-8'))
+            if not isinstance(result, list): raise ValueError
             return result
         except Exception as e: raise MamikosDecryptionError("Unable to decrypt Mamikos room list") from e
     _decrypt_rooms = decrypt_rooms
@@ -78,8 +87,15 @@ class MamikosAdapter:
         try: price=int(str(p).replace(".","").replace(",",""))
         except ValueError as e: raise MamikosMalformedResponse("Malformed room price") from e
         ids=list(raw.get("fac_room_ids") or [])+list(raw.get("fac_share_ids") or [])
+        amenities = set(FACILITIES[i] for i in ids if i in FACILITIES)
+        for tf in raw.get("top_facility") or []:
+            tfl = tf.lower()
+            if "ac" in tfl: amenities.add("AC")
+            if "mandi dalam" in tfl or "k. mandi dalam" in tfl: amenities.add("private bathroom")
+            if "wifi" in tfl: amenities.add("wifi")
+            if "panas" in tfl: amenities.add("hot water")
         url=raw.get("share_url","")
-        return KosListing(str(raw["_id"]),raw.get("room-title",raw.get("room_title","")),price,GENDERS.get(raw.get("gender"),Gender.CAMPUR),raw.get("area_label",raw.get("address","")),frozenset(FACILITIES[i] for i in ids if i in FACILITIES),self.name,url,raw.get("available_room") is not None and raw.get("available_room",0)>0,(url,))
+        return KosListing(str(raw["_id"]),raw.get("room-title",raw.get("room_title","")),price,GENDERS.get(raw.get("gender"),Gender.CAMPUR),raw.get("area_label",raw.get("address","")),frozenset(amenities),self.name,url,raw.get("available_room") is not None and raw.get("available_room",0)>0,(url,))
     def get_owner_phone(self, url):
         r=self._session.get(url,timeout=15)
         if r.status_code==429: raise MamikosRateLimited("Mamikos rate limit exceeded")
