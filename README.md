@@ -22,3 +22,13 @@ The project is currently an experimental, single-user tool. Its modular-monolith
 ## Current Status
 
 The existing code is a research prototype. The architecture in issue #1 is the implementation target, not a claim that the current prototype is production-ready.
+
+## Development
+
+Requires Python 3.10+. Run the standard-library test suite:
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+Pytest is also supported when installed: `pytest`.
