@@ -3,7 +3,7 @@ from __future__ import annotations
 import json, sqlite3
 from dataclasses import asdict
 from datetime import datetime, timezone
-from .domain import Gender, KosListing, RankedListing, SearchCriteria, TenantProfile
+from .domain import ContactStatus, Gender, KosListing, LandlordContact, RankedListing, SearchCriteria, TenantProfile
 
 class SQLitePersistenceAdapter:
     def __init__(self, database: str = "kos_hunter.sqlite3"):
@@ -19,6 +19,7 @@ class SQLitePersistenceAdapter:
             CREATE TABLE IF NOT EXISTS search_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_id TEXT NOT NULL, created_at TEXT NOT NULL, profile TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS listings (id INTEGER PRIMARY KEY AUTOINCREMENT, platform TEXT NOT NULL, platform_id TEXT NOT NULL, data TEXT NOT NULL, UNIQUE(platform, platform_id));
             CREATE TABLE IF NOT EXISTS candidates (run_id INTEGER NOT NULL REFERENCES search_runs(id), listing_id INTEGER NOT NULL REFERENCES listings(id), eligible INTEGER NOT NULL, score INTEGER NOT NULL, reasons TEXT NOT NULL, candidate_order INTEGER NOT NULL, PRIMARY KEY(run_id, listing_id));
+            CREATE TABLE IF NOT EXISTS contacts (listing_id INTEGER PRIMARY KEY REFERENCES listings(id), phone TEXT, status TEXT NOT NULL, source_links TEXT NOT NULL);
             """)
 
     def start_search(self, owner_id: str, criteria: SearchCriteria) -> int:
@@ -42,6 +43,14 @@ class SQLitePersistenceAdapter:
         # Compatibility with the original persistence port; create an owner-local run.
         criteria = SearchCriteria(0, TenantProfile(Gender.CAMPUR))
         self.save_search_run(self.start_search("local", criteria), [], shortlist)
+
+    def save_contacts(self, contacts) -> None:
+        with self._connect() as db:
+            for ranked, contact in contacts:
+                listing = ranked.listing; platform = listing.source or 'unknown'
+                db.execute('INSERT INTO listings(platform,platform_id,data) VALUES(?,?,?) ON CONFLICT(platform,platform_id) DO UPDATE SET data=excluded.data', (platform, listing.id, json.dumps(self._listing_data(listing))))
+                lid = db.execute('SELECT id FROM listings WHERE platform=? AND platform_id=?', (platform, listing.id)).fetchone()[0]
+                db.execute('INSERT INTO contacts(listing_id,phone,status,source_links) VALUES(?,?,?,?) ON CONFLICT(listing_id) DO UPDATE SET phone=excluded.phone,status=excluded.status,source_links=excluded.source_links', (lid, contact.phone or None, contact.status.value, json.dumps(contact.source_links)))
 
     def load_shortlist(self, run_id: int) -> list[RankedListing]:
         with self._connect() as db:

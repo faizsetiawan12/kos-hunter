@@ -4,7 +4,7 @@ import base64, json, re, time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
-from kos_hunter.domain import Gender, KosListing, SearchCriteria
+from kos_hunter.domain import Gender, KosListing, SearchCriteria, normalize_phone
 
 try:
     import requests
@@ -84,8 +84,13 @@ class MamikosAdapter:
         r=self._session.get(url,timeout=15)
         if r.status_code==429: raise MamikosRateLimited("Mamikos rate limit exceeded")
         if r.status_code in (401,403,419): raise MamikosSessionExpired("Mamikos session expired")
-        return (re.search(r"08[0-9]{8,13}",r.text) or [""])[0]
-    def get_contact(self, listing): return self.get_owner_phone(listing.url) if listing.url else ""
+        match = re.search(r"(?:\\+?62|0)[\\s().-]*[0-9][0-9\\s().-]{7,20}", r.text, re.I)
+        return match.group(0) if match else ""
+    def get_contact(self, listing):
+        raw = self.get_owner_phone(listing.url) if listing.url else ""
+        if not raw: return ""
+        try: return normalize_phone(raw)
+        except ValueError: return raw
     def health_check(self):
         try: return self._session.get(self.BASE_URL+self.FILTERS_EP,timeout=10).status_code==200
         except Exception: return False
