@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover
 _AES_KEY = b"39c852d0d0bc42ef83f7d3d708f42368"
 _AES_IV = b"5df5a10ebb035097"
 AREAS = {"kukel": ((106.815, -6.375), (106.830, -6.355)), "kutek": ((106.820, -6.370), (106.840, -6.350)), "ui_wide": ((106.800, -6.400), (106.860, -6.330))}
-CREDENTIALS_FILE = Path.home() / ".openclaw" / "kos-hunter" / "mamikos_session.json"
+CREDENTIALS_FILE = Path.home() / ".openclaw" / "kos-hunter" / "credentials.json"
 
 class MamikosError(Exception): pass
 class MamikosSessionExpired(MamikosError): pass
@@ -37,6 +37,9 @@ class MamikosAdapter:
     @property
     def name(self): return "mamikos"
     def _load_credentials(self):
+        env_token, env_device = __import__('os').environ.get('MAMIKOS_AUTH_TOKEN'), __import__('os').environ.get('MAMIKOS_DEVICE_ID')
+        if env_token:
+            self._session.headers.update({'Authorization': env_token, 'X-Device-ID': env_device or ''}); return
         if not self.credentials_file.exists(): raise MamikosSessionExpired("Mamikos session credentials are missing")
         try: c=json.loads(self.credentials_file.read_text()); token=c["xsrf_token"]; self._session.cookies.update({"laravel_session":c["laravel_session"],"XSRF-TOKEN":token}); self._session.headers.update({"X-XSRF-TOKEN":token,"Authorization":"GIT WEB:WEB","X-GIT-Time":"1406090202"})
         except (OSError, ValueError, KeyError) as e: raise MamikosSessionExpired("Invalid Mamikos credentials") from e
@@ -75,7 +78,8 @@ class MamikosAdapter:
         try: price=int(str(p).replace(".","").replace(",",""))
         except ValueError as e: raise MamikosMalformedResponse("Malformed room price") from e
         ids=list(raw.get("fac_room_ids") or [])+list(raw.get("fac_share_ids") or [])
-        return KosListing(str(raw["_id"]),raw.get("room-title",raw.get("room_title","")),price,GENDERS.get(raw.get("gender"),Gender.CAMPUR),raw.get("area_label",""),frozenset(FACILITIES[i] for i in ids if i in FACILITIES),self.name,raw.get("share_url",""))
+        url=raw.get("share_url","")
+        return KosListing(str(raw["_id"]),raw.get("room-title",raw.get("room_title","")),price,GENDERS.get(raw.get("gender"),Gender.CAMPUR),raw.get("area_label",raw.get("address","")),frozenset(FACILITIES[i] for i in ids if i in FACILITIES),self.name,url,raw.get("available_room") is not None and raw.get("available_room",0)>0,(url,))
     def get_owner_phone(self, url):
         r=self._session.get(url,timeout=15)
         if r.status_code==429: raise MamikosRateLimited("Mamikos rate limit exceeded")
